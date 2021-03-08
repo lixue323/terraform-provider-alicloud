@@ -1613,6 +1613,7 @@ func (s *EcsService) DescribeEcsCommand(id string) (object map[string]interface{
 	object = v.([]interface{})[0].(map[string]interface{})
 	return object, nil
 }
+
 func (s *EcsService) DescribeEcsHpcCluster(id string) (object map[string]interface{}, err error) {
 	var response map[string]interface{}
 	conn, err := s.client.NewEcsClient()

@@ -53,6 +53,72 @@ func TestAccAlicloudEcsCommand_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
+			{
+				Config: testAccConfig(map[string]interface{}{
+					"name": name + "Update",
+				}),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheck(map[string]string{
+						"name": name + "Update",
+					}),
+				),
+			},
+			//{
+			//	Config: testAccConfig(map[string]interface{}{
+			//		"working_dir": "/home/",
+			//	}),
+			//	Check: resource.ComposeTestCheckFunc(
+			//		testAccCheck(map[string]string{
+			//			"working_dir": "/home/",
+			//		}),
+			//	),
+			//},
+			{
+				Config: testAccConfig(map[string]interface{}{
+					"timeout": "70",
+				}),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheck(map[string]string{
+						"timeout": "70",
+					}),
+				),
+			},
+			{
+				Config: testAccConfig(map[string]interface{}{
+					"description": "For Terraform Test Update",
+				}),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheck(map[string]string{
+						"description": "For Terraform Test Update",
+					}),
+				),
+			},
+			//{
+			//	Config: testAccConfig(map[string]interface{}{
+			//		"command_content": "cHdk",
+			//	}),
+			//	Check: resource.ComposeTestCheckFunc(
+			//		testAccCheck(map[string]string{
+			//			"command_content": "cHdk",
+			//		}),
+			//	),
+			//},
+			{
+				Config: testAccConfig(map[string]interface{}{
+					//"command_content": "bHMK",
+					"description": "For Terraform Test",
+					"name":        name,
+					//"working_dir":     "/root",
+				}),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheck(map[string]string{
+						//"command_content": "bHMK",
+						"description": "For Terraform Test",
+						"name":        name,
+						//"working_dir":     "/root",
+					}),
+				),
+			},
 		},
 	})
 }

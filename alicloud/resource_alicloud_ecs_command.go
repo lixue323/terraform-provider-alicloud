@@ -16,6 +16,7 @@ func resourceAlicloudEcsCommand() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAlicloudEcsCommandCreate,
 		Read:   resourceAlicloudEcsCommandRead,
+		Update: resourceAlicloudEcsCommandUpdate,
 		Delete: resourceAlicloudEcsCommandDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -24,12 +25,10 @@ func resourceAlicloudEcsCommand() *schema.Resource {
 			"command_content": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
 			},
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
 			},
 			"enable_parameter": {
 				Type:     schema.TypeBool,
@@ -40,12 +39,10 @@ func resourceAlicloudEcsCommand() *schema.Resource {
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
 			},
 			"timeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
-				ForceNew: true,
 				Default:  60,
 			},
 			"type": {
@@ -57,7 +54,6 @@ func resourceAlicloudEcsCommand() *schema.Resource {
 			"working_dir": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
 			},
 		},
 	}
@@ -133,6 +129,59 @@ func resourceAlicloudEcsCommandRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("type", object["Type"])
 	d.Set("working_dir", object["WorkingDir"])
 	return nil
+}
+func resourceAlicloudEcsCommandUpdate(d *schema.ResourceData, meta interface{}) error {
+	client := meta.(*connectivity.AliyunClient)
+	var response map[string]interface{}
+	update := false
+	request := map[string]interface{}{
+		"CommandId": d.Id(),
+	}
+	request["RegionId"] = client.RegionId
+	if d.HasChange("command_content") {
+		update = true
+		request["CommandContent"] = d.Get("command_content")
+	}
+	if d.HasChange("description") {
+		update = true
+		request["Description"] = d.Get("description")
+	}
+	if d.HasChange("name") {
+		update = true
+		request["Name"] = d.Get("name")
+	}
+	if d.HasChange("timeout") {
+		update = true
+		request["Timeout"] = d.Get("timeout")
+	}
+	if d.HasChange("working_dir") {
+		update = true
+		request["WorkingDir"] = d.Get("working_dir")
+	}
+	if update {
+		action := "ModifyCommand"
+		conn, err := client.NewEcsClient()
+		if err != nil {
+			return WrapError(err)
+		}
+		wait := incrementalWait(3*time.Second, 3*time.Second)
+		err = resource.Retry(d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
+			response, err = conn.DoRequest(StringPointer(action), nil, StringPointer("POST"), StringPointer("2014-05-26"), StringPointer("AK"), nil, request, &util.RuntimeOptions{})
+			if err != nil {
+				if NeedRetry(err) {
+					wait()
+					return resource.RetryableError(err)
+				}
+				return resource.NonRetryableError(err)
+			}
+			addDebug(action, response, request)
+			return nil
+		})
+		if err != nil {
+			return WrapErrorf(err, DefaultErrorMsg, d.Id(), action, AlibabaCloudSdkGoERROR)
+		}
+	}
+	return resourceAlicloudEcsCommandRead(d, meta)
 }
 func resourceAlicloudEcsCommandDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*connectivity.AliyunClient)
